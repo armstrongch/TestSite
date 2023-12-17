@@ -34,16 +34,37 @@ var aux = {
 			html += "<p><input type='radio' id='elfIndex" + i.toString() + "' name='keep'/>" + player.elves[i].getHTML().replace("<p>", "") + "</p>";
 		}
 		
-		html += "<p><button onclick='aux.submitPassTurn()>Submit</button></p></div>";
+		html += "<p><button onclick='aux.submitPassTurn(" + playerIndex + ")'>Submit</button></p></div>";
 		$('#auxDiv').html(html);
 		$('#auxDiv').css('display', 'block');
 		$('#mainDiv').css('display', 'none');
 	},
 	
-	submitPassTurn: function()
+	submitPassTurn: function(playerIndex)
 	{
-		alert("Test");
-	}
+		var player = game.players[playerIndex];
+		
+		var elfToKeepIndex = -1;
+		for (var i = player.elves.length - 1; i >= 0 ; i -= 1)
+		{
+			if (!$("#elfIndex" + i.toString()).is(':checked'))
+			{
+				game.elfDiscard.push(player.elves[i]);
+				player.elves.splice(i, 1);
+			}
+		}
+		
+		if (!$("#ingredients").is(':checked'))
+		{
+			while(player.ingredients.length > 0)
+			{
+				game.ingredientDiscard.push(player.ingredients.pop());
+			}
+		}
+		
+		game.nextTurn(-1);
+		this.showMainDiv();
+	},
 	
 	startGameButtonClick: function()
 	{

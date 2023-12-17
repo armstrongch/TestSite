@@ -59,7 +59,7 @@ function gameConst(playerCount, humanCount)
 				this.recipeMarket[i].roundsAvailable -= 1;
 			}
 		}
-		this.recipeMarket.push(this.recipeList.pop());
+		this.recipeMarket.push(this.recipeDeck.pop());
 		
 		//add ingredients discard to ingredients deck and shuffle.
 		while (this.ingredientDiscard.length > 0) { this.ingredientDeck.push(this.ingredientDiscard.pop()); }
@@ -87,6 +87,8 @@ function gameConst(playerCount, humanCount)
 				this.players[i].elves[j].tired = false;
 			}
 		}
+		
+		draw.writeToLog("A new round begins");
 	};
 	
 	this.claimIngredientFromMarket = function(marketIndex)
@@ -133,7 +135,6 @@ function gameConst(playerCount, humanCount)
 		this.activePlayer().passed = true;
 		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " passes their turn.");
 		aux.passTurn(this.activePlayerIndex);
-		//this.nextTurn(-1);
 	};
 	
 	this.claimElfFromMarket = function(marketIndex)
