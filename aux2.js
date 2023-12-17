@@ -25,7 +25,8 @@ var aux = {
 	{
 		var player = game.players[playerIndex];
 		
-		var html = "<div>" + player.getHTML(game, playerIndex, true) + "</div><div>" +
+		var html = "<div>" + draw.recipesDivHTML(game, true) + "</div>" + 
+			"<div>" + player.getHTML(game, playerIndex, true) + "</div><div>" +
 			"<p>Player " + (playerIndex+1).toString() + ": What will you keep for the next round?</p>" +
 			"<p><input type='radio' id='ingredients' name='keep' checked='true'/>All Ingredients</p>";
 			

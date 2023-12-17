@@ -64,7 +64,12 @@ var draw = {
 		var html = "PLAYERS: ";
 		for (var i = 0; i < game.players.length; i += 1)
 		{
-			html += game.players[i].getHTML(game, i, anotherPlayerElf);
+			var playerDisplayIndex = game.activePlayerIndex + i;
+			if (playerDisplayIndex >= game.players.length)
+			{
+				playerDisplayIndex -= game.players.length;
+			}
+			html += game.players[playerDisplayIndex].getHTML(game, playerDisplayIndex, anotherPlayerElf);
 		}
 		
 		return html;
