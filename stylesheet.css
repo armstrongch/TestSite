@@ -1,0 +1,53 @@
+body {
+	font-size: large;
+}
+
+button {
+	font-size: large;
+}
+
+.chocolate {
+	font-weight: bold;
+	background-color: black;
+	color: white;
+}
+
+.oatmeal {
+	font-weight: bold;
+	background-color: brown;
+	color: white;
+}
+
+.frosting {
+	font-weight: bold;
+	background-color: green;
+	color: white;
+}
+
+.points {
+	font-weight: bold;
+	background-color: red;
+	color: white;
+}
+
+.gameAreaDiv {
+	border: 1px solid black;
+	margin: 5px;
+	padding: 5px;
+}
+
+.playerDiv {
+	border: 1px solid black;
+	margin: 5px;
+	padding: 5px;
+}
+
+.activePlayerDiv {
+	border: 5px dashed grey;
+	margin: 5px;
+	padding: 5px;
+}
+
+.clickable {
+	cursor: pointer;
+}
