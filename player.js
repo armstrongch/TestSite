@@ -26,7 +26,7 @@ function player(isHuman)
 		//Elves
 		for (var i = 0; i < this.elves.length; i += 1)
 		{
-			if (active && game.activePlayerCanAffordElf(playerNum, i))
+			if (active && game.activePlayerCanAffordElf(playerNum, i) || game.ingredientMarket.length > 0)
 			{
 				html += "<span class='clickable' onclick='game.useElf(" + playerNum + ", " + i.toString() + ")'>" + this.elves[i].getHTML() + "</span>";
 			}
@@ -38,8 +38,6 @@ function player(isHuman)
 		
 		//Points
 		html += "<p><span class='points'>POINTS: " + this.score.toString() + "</span></p>"
-		
-		if (active && !anotherPlayerElf) { html += "<p><button onclick='game.passTurn()'>Pass Turn</button></p>"; }
 
 		html += "</div>";
 		

@@ -9,7 +9,6 @@ function gameConst(playerCount, humanCount)
 	
 	this.recipeDeck = getRecipeDeck();
 	this.recipeMarket = [];
-	this.recipeDiscard = [];
 	
 	this.ingredientDeck = ingFunctions.getIngredientDeck(playerCount);
 	this.ingredientMarket = [];
@@ -17,11 +16,11 @@ function gameConst(playerCount, humanCount)
 	
 	this.elfDeck = getElfDeck();
 	this.elfMarket = [];
-	this.elfDiscard = [];
 	
 	for (var i = 0; i < playerCount; i += 1)
 	{
-		this.players.push(new player(i < humanCount));
+		var isHuman = i < humanCount;
+		this.players.push(new player(isHuman));
 	}
 	
 	this.recipeDeck.sort(() => Math.random() - 0.5);
@@ -46,12 +45,13 @@ function gameConst(playerCount, humanCount)
 	
 	this.startNewRound = function()
 	{
-		//Update the age of all recipes. Remove the oldest, and add a new one.
+		//Update the age of all recipes. Move the oldest to the bottom of the deck, and add one from the top of the deck.
 		for (var i = this.recipeMarket.length - 1; i >= 0; i -= 1)
 		{
 			if (this.recipeMarket[i].roundsAvailable == 1)
 			{
-				this.recipeDiscard.push(this.recipeMarket[i]);
+				this.recipeMarket[i].roundsAvailable = 3;
+				this.recipeDeck.unshift(this.recipeMarket[i]);
 				this.recipeMarket.splice(i, 1);
 			}
 			else
@@ -66,17 +66,6 @@ function gameConst(playerCount, humanCount)
 		this.ingredientDeck.sort(() => Math.random() - 0.5);
 		//Refill the market up to 6 if necessary.
 		while (this.ingredientMarket.length < 6) { this.ingredientMarket.push(this.ingredientDeck.pop()); }
-		
-		//add elf discard to elf deck and shuffle
-		while (this.elfDiscard.length > 0) { this.elfDeck.push(this.elfDiscard.pop()); }
-		this.elfDeck.sort(() => Math.random() - 0.5);
-		//discard current elf market
-		while (this.elfMarket.length > 0) { this.elfDiscard.push(this.elfMarket.pop()); }
-		//add 3 new elves to market from deck
-		for (var i = 0; i < 3; i += 1)
-		{
-			this.elfMarket.push(this.elfDeck.pop());
-		}
 		
 		//no players have passed, and no elves are tired
 		for (var i = 0; i < this.players.length; i += 1)
@@ -101,10 +90,10 @@ function gameConst(playerCount, humanCount)
 			this.ingredientMarket.push(this.ingredientDeck.pop());
 		}
 		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " claims " + ingNames[ing] + " from the market");
-		this.nextTurn(-1);
+		this.nextTurn(-1, true);
 	};
 	
-	this.nextTurn = function(elfIndexToTire)
+	this.nextTurn = function(elfIndexToTire, moveOnToNextPlayer)
 	{
 		if (this.players.filter(p => !p.passed).length == 0)
 		{
@@ -117,23 +106,39 @@ function gameConst(playerCount, humanCount)
 			if (i == elfIndexToTire) { elf.tired = true; } else { elf.tired = false; }
 		}
 
-		this.activePlayerIndex += 1;
-		if (this.activePlayerIndex >= this.players.length)
+		if (moveOnToNextPlayer)
 		{
-			this.activePlayerIndex = 0;
-		}
-		if (this.activePlayer().passed)
-		{
-			this.nextTurn(-1);
+			this.activePlayerIndex += 1;
+			if (this.activePlayerIndex >= this.players.length)
+			{
+				this.activePlayerIndex = 0;
+			}
+			if (this.activePlayer().passed)
+			{
+				this.nextTurn(-1, true);
+			}
 		}
 		
 		draw.gameState(game, false);
+		
+		if (this.ingredientMarket.length == 0)
+		{
+			var canAffordAnyRecipe = false;
+			for (var i = 0; i < this.recipeMarket.length; i += 1)
+			{
+				if (this.playerCanBakeRecipe(i)) { canAffordAnyRecipe = true; }
+			}
+			if (!canAffordAnyRecipe)
+			{
+				this.passTurn();
+			}
+		}
 	};
 	
 	this.passTurn = function()
 	{
 		this.activePlayer().passed = true;
-		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " passes their turn.");
+		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " does not have enough ingredients to bake any more cookies, and passes their turn.");
 		aux.passTurn(this.activePlayerIndex);
 	};
 	
@@ -147,7 +152,7 @@ function gameConst(playerCount, humanCount)
 			this.elfMarket.push(this.elfDeck.pop());
 		}
 		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " claims an elf from the market.");
-		this.nextTurn(-1);
+		this.nextTurn(-1, true);
 	};
 	
 	this.playerCanBakeRecipe = function(marketIndex)
@@ -173,12 +178,21 @@ function gameConst(playerCount, humanCount)
 		
 		var hasAllIngredients = true;
 		
-		//we only need to check the 3 raw ingredient requirements. Everything else is good no matter what ingredients the player has. For example: "All Chocolate" still works if the player has 0 chocolate. This may change if the elf requirements change.
 		for (var i = 0; i < 3; i += 1)
 		{
 			var elfCount = elf.give.filter(x => x == i).length;
 			var playerCount = this.activePlayer().ingredients.filter(x => x == i).length;
 			if (elfCount > playerCount)
+			{
+				hasAllIngredients = false;
+			}
+		}
+		
+		//To give "All Chocolate" you must have at least 1 chocolate.
+		if (elf.get[0] >= 3 && elf.get[0] <= 5)
+		{
+			var playerCount = this.activePlayer().ingredients.filter(x => x == (i-3)).length; 
+			if (playerCount == 0)
 			{
 				hasAllIngredients = false;
 			}
@@ -249,7 +263,7 @@ function gameConst(playerCount, humanCount)
 					}
 				}
 			}
-			this.nextTurn(playerElfIndex);
+			this.nextTurn(playerElfIndex, true);
 		}
 	};
 	
@@ -271,7 +285,7 @@ function gameConst(playerCount, humanCount)
 		
 		player.score += recipe.points;
 		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " bakes cookies for <span class='points'>" + recipe.points.toString() + " points</span>.");
-		this.nextTurn(-1);
+		this.nextTurn(-1, false);
 	};
 	
 };	

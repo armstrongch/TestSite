@@ -1,10 +1,18 @@
 var draw = {
 	gameState: function(game, anotherPlayerElf)
 	{
-		$('#recipesDiv').html(this.recipesDivHTML(game, anotherPlayerElf));
-		$('#elvesForHireDiv').html(this.elvesForHireDivHTML(game, anotherPlayerElf));
-		$('#ingredientsMarketDiv').html(this.ingredientsMarketDivHTML(game, anotherPlayerElf));
-		$('#playersDiv').html(this.playersDivHTML(game, anotherPlayerElf));
+		if (!game.activePlayer().isHuman && !anotherPlayerElf)
+		{
+			$('#mainDiv').html('WAIT FOR CPU TURN');
+			$('#auxDiv').html('WAIT FOR CPU TURN');
+		}
+		else
+		{
+			$('#recipesDiv').html(this.recipesDivHTML(game, anotherPlayerElf));
+			$('#elvesForHireDiv').html(this.elvesForHireDivHTML(game, anotherPlayerElf));
+			$('#ingredientsMarketDiv').html(this.ingredientsMarketDivHTML(game, anotherPlayerElf));
+			$('#playersDiv').html(this.playersDivHTML(game, anotherPlayerElf));
+		}
 	},
 	
 	recipesDivHTML: function(game, anotherPlayerElf)
@@ -12,7 +20,7 @@ var draw = {
 		var html = "";
 		for (var i = 0; i < game.recipeMarket.length; i += 1)
 		{
-			if (game.playerCanBakeRecipe(i) && !anotherPlayerElf)
+			if (game.playerCanBakeRecipe(i) && game.ingredientMarket.length == 0)
 			{
 				html += "<span class='clickable' onclick='game.bakeCookie(" + i.toString() + ")'>" + game.recipeMarket[i].getHTML() + "</span>";
 			}
@@ -28,7 +36,7 @@ var draw = {
 		var html = "";
 		for (var i = 0; i < game.elfMarket.length; i += 1)
 		{
-			if (anotherPlayerElf)
+			if (anotherPlayerElf || game.ingredientMarket.length == 0)
 			{
 				html += game.elfMarket[i].getHTML();
 			}

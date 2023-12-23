@@ -185,9 +185,9 @@ function getElfDeck()
 		elves.push(new elf([], [m.threeLCom])); //get 1 of the ingredient you have the least of
 	}
 	
-	elves.push(new elf([0], [m.elf])); //give C, use another player's elf
-	elves.push(new elf([1], [m.elf]));
-	elves.push(new elf([2], [m.elf]));
+	for (var i = 0; i < 3; i += 1) {
+		elves.push(new elf([], [m.elf])); //use another player's elf
+	}
 	
 	elves.push(new elf([0,0], [m.allMkt])); //give C + C, get all ingredients in the market
 	elves.push(new elf([1,1], [m.allMkt]));

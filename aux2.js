@@ -50,7 +50,7 @@ var aux = {
 		{
 			if (!$("#elfIndex" + i.toString()).is(':checked'))
 			{
-				game.elfDiscard.push(player.elves[i]);
+				game.elfDeck.unshift(player.elves[i]);
 				player.elves.splice(i, 1);
 			}
 		}
@@ -63,7 +63,7 @@ var aux = {
 			}
 		}
 		
-		game.nextTurn(-1);
+		game.nextTurn(-1, true);
 		this.showMainDiv();
 	},
 	
@@ -72,9 +72,9 @@ var aux = {
 		var playerCount = Math.floor(Number($('#selectPlayerCount')[0].value));
 		var humanCount = Math.floor(Number($('#selectHumanCount')[0].value));
 		
-		if (playerCount > 0 && humanCount > 0 && humanCount <= playerCount)
+		if (playerCount > 0 && humanCount <= playerCount)
 		{
-			game = new gameConst(playerCount, playerCount);
+			game = new gameConst(playerCount, humanCount);
 			draw.gameState(game, false);
 			aux.showMainDiv();
 		}

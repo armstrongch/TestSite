@@ -30,7 +30,7 @@ function getRecipeDeck()
 	recipes.push(new recipe([1,1,1], 2));
 	recipes.push(new recipe([2,2,2], 2));
 	
-	recipes.push(new recipe([0,1,2], 3));
+	recipes.push(new recipe([0,1,2], 4));
 	
 	return recipes;
 }
