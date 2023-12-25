@@ -132,6 +132,14 @@ function gameConst(playerCount, humanCount)
 			{
 				this.passTurn();
 			}
+			else if (!this.activePlayer().isHuman)
+			{
+				cpu.playTurn();
+			}
+		}
+		else if (!this.activePlayer().passed && !this.activePlayer().isHuman)
+		{
+			cpu.playTurn();
 		}
 	};
 	
@@ -191,7 +199,7 @@ function gameConst(playerCount, humanCount)
 		//To give "All Chocolate" you must have at least 1 chocolate.
 		if (elf.get[0] >= 3 && elf.get[0] <= 5)
 		{
-			var playerCount = this.activePlayer().ingredients.filter(x => x == (i-3)).length; 
+			var playerCount = this.activePlayer().ingredients.filter(x => x == (elf.get[0]-3)).length; 
 			if (playerCount == 0)
 			{
 				hasAllIngredients = false;

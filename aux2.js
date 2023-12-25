@@ -5,16 +5,22 @@ var aux = {
 		$('#mainDiv').css('display', 'block');
 	},
 	
+	waitForCPUTurn: function()
+	{
+		$('#auxDiv').css('display', 'none');
+		$('#mainDiv').css('display', 'none');
+	},
+	
 	gameSetup: function()
 	{
 		$('#auxDiv').html(
-			'<p>How many players? <input type="number" min="2" max="6" id="selectPlayerCount"></p>' +
+			'<p>How many players? (2-6) <input type="number" min="2" max="6" id="selectPlayerCount"></p>' +
 			'<p>How many human players? <input type="number" min="2" max="6" id="selectHumanCount"></p>' +
 			'<button id="startGameButton" onclick="aux.startGameButtonClick()">Start Game</button>'
 		);
 		
-		$('#selectPlayerCount')[0].value = 3;
-		$('#selectHumanCount')[0].value = 3;
+		$('#selectPlayerCount')[0].value = 2;
+		$('#selectHumanCount')[0].value = 1;
 		
 		$('#auxDiv').css('display', 'block');
 		$('#mainDiv').css('display', 'none');
@@ -24,7 +30,6 @@ var aux = {
 	passTurn: function(playerIndex)
 	{
 		var player = game.players[playerIndex];
-		
 		var html = "<div>" + draw.recipesDivHTML(game, true) + "</div>" + 
 			"<div>" + player.getHTML(game, playerIndex, true) + "</div><div>" +
 			"<p>Player " + (playerIndex+1).toString() + ": What will you keep for the next round?</p>" +
@@ -39,6 +44,12 @@ var aux = {
 		$('#auxDiv').html(html);
 		$('#auxDiv').css('display', 'block');
 		$('#mainDiv').css('display', 'none');
+		
+		if (!player.isHuman)
+		{
+			this.waitForCPUTurn();
+			cpu.roundEndCleanup();
+		}
 	},
 	
 	submitPassTurn: function(playerIndex)
@@ -69,8 +80,8 @@ var aux = {
 	
 	startGameButtonClick: function()
 	{
-		var playerCount = Math.floor(Number($('#selectPlayerCount')[0].value));
-		var humanCount = Math.floor(Number($('#selectHumanCount')[0].value));
+		var playerCount = Math.min(6, Math.max(2, Math.floor(Number($('#selectPlayerCount')[0].value))));
+		var humanCount = Math.min(6, Math.max(0, Math.floor(Number($('#selectHumanCount')[0].value))));
 		
 		if (playerCount > 0 && humanCount <= playerCount)
 		{

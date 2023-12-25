@@ -136,7 +136,14 @@ function elf(give, get)
 					break;
 				case m.elf: //"Use another player's elf"
 					passTurn = false;
-					draw.gameState(game, true);
+					if (game.activePlayer().isHuman)
+					{
+						draw.gameState(game, true);
+					}
+					else
+					{
+						cpu.useAnotherElf();
+					}
 					break;
 				case m.allMkt:
 					var newGetArray = [];

@@ -18,19 +18,19 @@ function getRecipeDeck()
 {
 	var recipes = [];
 	
-	recipes.push(new recipe([0,0], 1));
-	recipes.push(new recipe([1,1], 1));
-	recipes.push(new recipe([2,2], 1));
+	recipes.push(new recipe([0,0], 2));
+	recipes.push(new recipe([1,1], 2));
+	recipes.push(new recipe([2,2], 2));
 	
 	recipes.push(new recipe([0,1], 2));
 	recipes.push(new recipe([1,2], 2));
 	recipes.push(new recipe([2,0], 2));
 	
-	recipes.push(new recipe([0,0,0], 2));
-	recipes.push(new recipe([1,1,1], 2));
-	recipes.push(new recipe([2,2,2], 2));
+	recipes.push(new recipe([0,0,0], 4));
+	recipes.push(new recipe([1,1,1], 4));
+	recipes.push(new recipe([2,2,2], 4));
 	
-	recipes.push(new recipe([0,1,2], 4));
+	recipes.push(new recipe([0,1,2], 3));
 	
 	return recipes;
 }

@@ -7,25 +7,22 @@ button {
 }
 
 .chocolate {
-	font-weight: bold;
+	
 	background-color: black;
 	color: white;
 }
 
 .oatmeal {
-	font-weight: bold;
 	background-color: brown;
 	color: white;
 }
 
 .frosting {
-	font-weight: bold;
 	background-color: green;
 	color: white;
 }
 
 .points {
-	font-weight: bold;
 	background-color: red;
 	color: white;
 }
@@ -50,4 +47,5 @@ button {
 
 .clickable {
 	cursor: pointer;
+	font-weight: bold;
 }

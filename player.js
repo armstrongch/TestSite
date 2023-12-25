@@ -26,7 +26,7 @@ function player(isHuman)
 		//Elves
 		for (var i = 0; i < this.elves.length; i += 1)
 		{
-			if (active && game.activePlayerCanAffordElf(playerNum, i) || game.ingredientMarket.length > 0)
+			if (active && game.activePlayerCanAffordElf(playerNum, i) && game.ingredientMarket.length > 0)
 			{
 				html += "<span class='clickable' onclick='game.useElf(" + playerNum + ", " + i.toString() + ")'>" + this.elves[i].getHTML() + "</span>";
 			}

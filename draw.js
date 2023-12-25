@@ -3,11 +3,11 @@ var draw = {
 	{
 		if (!game.activePlayer().isHuman && !anotherPlayerElf)
 		{
-			$('#mainDiv').html('WAIT FOR CPU TURN');
-			$('#auxDiv').html('WAIT FOR CPU TURN');
+			aux.waitForCPUTurn();
 		}
 		else
 		{
+			aux.showMainDiv();
 			$('#recipesDiv').html(this.recipesDivHTML(game, anotherPlayerElf));
 			$('#elvesForHireDiv').html(this.elvesForHireDivHTML(game, anotherPlayerElf));
 			$('#ingredientsMarketDiv').html(this.ingredientsMarketDivHTML(game, anotherPlayerElf));
@@ -25,7 +25,9 @@ var draw = {
 				html += "<span class='clickable' onclick='game.bakeCookie(" + i.toString() + ")'>" + game.recipeMarket[i].getHTML() + "</span>";
 			}
 			else
-			html += game.recipeMarket[i].getHTML();
+			{
+				html += game.recipeMarket[i].getHTML();
+			}
 		}
 		
 		return html;
