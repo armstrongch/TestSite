@@ -77,7 +77,7 @@ function elf(give, get)
 		{
 			var allIng = 0; //all chocolate
 			if (this.give[0] == m.allO) { allIng = 1; } //all oatmeal
-			if (this.give[0] == m.allF) { allIng = 2; } //all frosting
+			if (this.give[0] == m.allF) { allIng = 2; } //all sprinkles
 			
 			for (var i = player.ingredients.length - 1; i >= 0; i -= 1)
 			{

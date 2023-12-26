@@ -7,13 +7,13 @@ var ing = {
 var ingNames_NoFormat = {
 	0: "CHC",
 	1: "OAT",
-	2: "FRS"
+	2: "SPK"
 }
 
 var ingNames = {
 	0: "<span class='chocolate'>" + ingNames_NoFormat[0] + "</span>",
 	1: "<span class='oatmeal'>" + ingNames_NoFormat[1] + "</span>",
-	2: "<span class='frosting'>" + ingNames_NoFormat[2] + "</span>"
+	2: "<span class='sprinkles'>" + ingNames_NoFormat[2] + "</span>"
 }
 
 var ingFunctions = {
