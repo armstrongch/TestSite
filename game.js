@@ -65,7 +65,10 @@ function gameConst(playerCount, humanCount)
 		while (this.ingredientDiscard.length > 0) { this.ingredientDeck.push(this.ingredientDiscard.pop()); }
 		this.ingredientDeck.sort(() => Math.random() - 0.5);
 		//Refill the market up to 6 if necessary.
-		while (this.ingredientMarket.length < 6) { this.ingredientMarket.push(this.ingredientDeck.pop()); }
+		while (this.ingredientMarket.length < 6 && this.ingredientDeck.length > 0)
+		{
+			this.ingredientMarket.push(this.ingredientDeck.pop());
+		}
 		
 		//no players have passed, and no elves are tired
 		for (var i = 0; i < this.players.length; i += 1)
@@ -146,7 +149,6 @@ function gameConst(playerCount, humanCount)
 	this.passTurn = function()
 	{
 		this.activePlayer().passed = true;
-		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " does not have enough ingredients to bake any more cookies, and passes their turn.");
 		aux.passTurn(this.activePlayerIndex);
 	};
 	
@@ -226,35 +228,64 @@ function gameConst(playerCount, humanCount)
 		}
 		else if (elf.get[0] == elfGiveGetMappings.elf)
 		{
-			validGet = false;
-			for (var i = 0; i < game.players.length; i += 1)
-			{
-				if (i != this.activePlayerIndex)
-				{
-					for (var j = 0; j < game.players[i].elves.length; j += 1)
-					{
-						var elf = game.players[i].elves[j];
-						
-						//don't allow player loop this ability lol
-						if (elf.get[0] != elfGiveGetMappings.elf && game.activePlayerCanAffordElf(i, j))
-						{
-							validGet = true;
-						}
-					}
-				}
-			}
+			var result = this.getFirst_UseOther_ValidElf();
+			if (result.playerIndex == -1) { validGet = false; }
 		}
 		
 		return hasAllIngredients && !elf.tired && validGet;
 	};
+	
+	this.getFirst_UseOther_ValidElf = function()
+	{
+		var result = { playerIndex: -1, elfIndex: -1 };
+		var testPlayerIndex = this.activePlayerIndex;
+		
+		for (var i = 0; i < this.players.length - 1; i += 1)
+		{
+			testPlayerIndex += 1;
+			if (testPlayerIndex >= this.players.length) { testPlayerIndex = 0; }
+			
+			var testPlayer = this.players[testPlayerIndex];
+			
+			for (var j = 0; j < testPlayer.elves.length; j += 1)
+			{
+				var testElf = testPlayer.elves[j];
+				if (testElf.get[0] != elfGiveGetMappings.elf && this.activePlayerCanAffordElf(testPlayerIndex, j))
+				{
+					result.playerIndex = testPlayerIndex;
+					result.elfIndex = j;
+					return result;
+				}
+			}
+		}
+		
+		return result;
+	}
 	
 	this.useElf = function(playerOwnerIndex, playerElfIndex)
 	{
 		var player = game.players[playerOwnerIndex];
 		var elf = player.elves[playerElfIndex];
 		elf.processGive();
-		var passTurn = elf.processGet(elf.get);
-		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " uses an elf.");
+		var passTurn = elf.processGet(elf.get, playerOwnerIndex);
+		
+		if (elf.get[0] != elfGiveGetMappings.elf)
+		{
+			if (playerOwnerIndex != game.activePlayerIndex)
+			{
+				draw.writeToLog(
+					"Player " + (this.activePlayerIndex+1).toString() + " uses another Player " + (playerOwnerIndex+1).toString() + "'s elf: " + elf.getHTML(false, false));
+			}
+			else 
+			{
+				draw.writeToLog(
+					"Player " + (this.activePlayerIndex+1).toString() + " uses an elf: " + elf.getHTML(false, false));
+			}
+		}
+		
+		console.log("useElf(" + playerOwnerIndex.toString() + ", " + playerElfIndex.toString());
+		
+		var activePlayer = this.activePlayer();
 		if (passTurn)
 		{
 			var elfToTireIndex = playerElfIndex;
@@ -262,21 +293,31 @@ function gameConst(playerCount, humanCount)
 			//If elf is being used by another player, tire the active player's elf.
 			if (playerOwnerIndex != game.activePlayerIndex)
 			{
-				var activePlayer = this.activePlayer();
 				for (var i = 0; i < this.activePlayer().elves.length; i += 1)
 				{
-					if (this.activePlayer().elves[i].get[0] = elfGiveGetMappings.elf)
+					var testElf = activePlayer.elves[i];
+					if (testElf.get[0] == elfGiveGetMappings.elf && !testElf.tired)
 					{
 						elfToTireIndex = i;
 					}
 				}
 			}
-			this.nextTurn(playerElfIndex, true);
+			console.log("elfToTireIndex: " + elfToTireIndex.toString());
+			this.nextTurn(elfToTireIndex, true);
+		}
+		else if (!activePlayer.isHuman)
+		{
+			cpu.useAnotherElf();
 		}
 	};
 	
 	this.bakeCookie = function(marketIndex)
 	{
+		if (marketIndex < 0 || marketIndex > 2)
+		{
+			alert("Error! Market Index = " + marketIndex.toString());
+		}
+		
 		if (!game.playerCanBakeRecipe(marketIndex))
 		{
 			alert("Error! Player does not have enough ingredients for recipe!");
@@ -293,6 +334,7 @@ function gameConst(playerCount, humanCount)
 		
 		player.score += recipe.points;
 		draw.writeToLog("Player " + (this.activePlayerIndex+1).toString() + " bakes cookies for <span class='points'>" + recipe.points.toString() + " points</span>.");
+		
 		this.nextTurn(-1, false);
 	};
 	

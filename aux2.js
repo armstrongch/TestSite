@@ -37,7 +37,7 @@ var aux = {
 			
 		for (var i = 0; i < player.elves.length; i += 1)
 		{
-			html += "<p><input type='radio' id='elfIndex" + i.toString() + "' name='keep'/>" + player.elves[i].getHTML().replace("<p>", "") + "</p>";
+			html += "<p><input type='radio' id='elfIndex" + i.toString() + "' name='keep'/>" + player.elves[i].getHTML(false, true) + "</p>";
 		}
 		
 		html += "<p><button onclick='aux.submitPassTurn(" + playerIndex + ")'>Submit</button></p></div>";
@@ -54,6 +54,10 @@ var aux = {
 	
 	submitPassTurn: function(playerIndex)
 	{
+		var printPlayerNum = (game.activePlayerIndex+1).toString();
+		
+		draw.writeToLog("Player " + printPlayerNum + " does not have enough ingredients to bake any more cookies, and passes their turn.");
+		
 		var player = game.players[playerIndex];
 		
 		var elfToKeepIndex = -1;
@@ -64,6 +68,10 @@ var aux = {
 				game.elfDeck.unshift(player.elves[i]);
 				player.elves.splice(i, 1);
 			}
+			else
+			{
+				draw.writeToLog("Player " + printPlayerNum + " keeps an elf until next round.");
+			}
 		}
 		
 		if (!$("#ingredients").is(':checked'))
@@ -72,6 +80,10 @@ var aux = {
 			{
 				game.ingredientDiscard.push(player.ingredients.pop());
 			}
+		}
+		else
+		{
+			draw.writeToLog("Player " + printPlayerNum + " keeps their ingredients for the next round.");
 		}
 		
 		game.nextTurn(-1, true);
@@ -88,6 +100,10 @@ var aux = {
 			game = new gameConst(playerCount, humanCount);
 			draw.gameState(game, false);
 			aux.showMainDiv();
+			if (humanCount == 0)
+			{
+				cpu.playTurn();
+			}
 		}
 	}
 };

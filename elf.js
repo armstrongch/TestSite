@@ -44,7 +44,7 @@ function elf(give, get)
 		this.getText.push(elfGiveGetTextMappings[get[i]]);
 	}
 	
-	this.getHTML = function()
+	this.getHTML = function(wrapInParagraphTags, includeElfPrefix)
 	{
 		var giveHtml = "";
 		if (this.give.length > 0)
@@ -56,7 +56,19 @@ function elf(give, get)
 		
 		var tiredHtml = this.tired ? "(TIRED) " : "";
 		
-		return "<p>ELF: " + tiredHtml + giveHtml + getHtml + "</p>";
+		var returnHTML = tiredHtml + giveHtml + getHtml;
+		
+		if (includeElfPrefix)
+		{
+			var returnHTML = "ELF: " + returnHTML;
+		}
+		
+		if (wrapInParagraphTags)
+		{
+			returnHTML = "<p>" + returnHTML + "</p>";
+		}
+		
+		return returnHTML;
 	}
 	
 	this.processGive = function()
@@ -90,7 +102,7 @@ function elf(give, get)
 		}
 	};
 	
-	this.processGet = function(getArray)
+	this.processGet = function(getArray, playerOwnerIndex)
 	{
 		var player = game.activePlayer();
 		var m = elfGiveGetMappings;
@@ -104,7 +116,6 @@ function elf(give, get)
 				if (game.ingredientMarket.includes(getArray[i]))
 				{
 					player.ingredients.push(getArray[i]);
-					game.ingredientDiscard.push(getArray[i]);
 					game.ingredientMarket.splice(game.ingredientMarket.indexOf(getArray[i]), 1);
 				}
 			}
@@ -128,21 +139,22 @@ function elf(give, get)
 					break;
 				case m.comMkt: //"All of the most common ingredient in the market"
 					var ing = ingFunctions.getMostCommonMarketIngredientArray()[0];
-					this.processGet([ing+3]);
+					this.processGet([ing+3], playerOwnerIndex);
 					break;
 				case m.threeLCom: //"3 of the ingredient you have the least of"
 					var ing = ingFunctions.getFewestOwnedIngredients()[0];
-					this.processGet([ing, ing, ing]);
+					this.processGet([ing, ing, ing], playerOwnerIndex);
 					break;
 				case m.elf: //"Use another player's elf"
 					passTurn = false;
+					draw.gameState(game, true);
 					if (game.activePlayer().isHuman)
 					{
-						draw.gameState(game, true);
+						
 					}
 					else
 					{
-						cpu.useAnotherElf();
+						//cpu.useAnotherElf();
 					}
 					break;
 				case m.allMkt:
@@ -151,7 +163,7 @@ function elf(give, get)
 					{
 						newGetArray.push(game.ingredientMarket[i]);
 					}
-					this.processGet(newGetArray);
+					this.processGet(newGetArray, playerOwnerIndex);
 					break;
 			}
 			
@@ -160,6 +172,11 @@ function elf(give, get)
 		while (game.ingredientDeck.length > 0 && game.ingredientMarket.length < 6)
 		{
 			game.ingredientMarket.push(game.ingredientDeck.pop());
+		}
+		
+		if (playerOwnerIndex != game.activePlayerIndex && game.activePlayer().isHuman)
+		{
+			passTurn = true;
 		}
 		
 		return passTurn;

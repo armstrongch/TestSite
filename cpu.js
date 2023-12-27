@@ -3,32 +3,10 @@ var cpu = {
 	
 	useAnotherElf: function()
 	{
-		var foundTarget = false;
-		var checkIndex = game.activePlayerIndex + 1;
-		var playerNum = game.activePlayerIndex;
-		
-		while (!foundTarget)
+		var result = game.getFirst_UseOther_ValidElf();
+		if (result.playerIndex != -1)
 		{
-			if (checkIndex == game.currentPlayerIndex)
-			{
-				alert("Error! Could not find another elf for CPU to use.");
-			}
-			else if (checkIndex >= game.players.length)
-			{
-				checkIndex = 0;
-			}
-			else
-			{
-				for (var i = 0; i < game.players[checkIndex].elves.length; i += 1)
-				{
-					if (game.activePlayerCanAffordElf(playerNum, i))
-					{
-						game.useElf(playerNum, i);
-						i = game.players[checkIndex].elves.length;
-						foundTarget = true;
-					}
-				}
-			}
+			game.useElf(result.playerIndex, result.elfIndex);
 		}
 	},
 	
@@ -52,6 +30,7 @@ var cpu = {
 		var canAffordLeftElf = false;
 		var canAffordRightElf = false;
 		
+		//console.log("CPU Turn: Player " + playerNum.toString());
 		
 		if (elfCount > 0)
 		{
@@ -67,31 +46,38 @@ var cpu = {
 		{
 			if (elfCount == 0 && elvesAreAvailable)
 			{
+				//console.log("   Claim Elf");
 				game.claimElfFromMarket(0);
 			}
 			else if (elfCount == 1 && canAffordLeftElf)
 			{
+				//console.log("   Use Left Elf");
 				game.useElf(playerNum, 0);
 			}
 			else if (elfCount == 1 && elvesAreAvailable)
 			{
+				//console.log("   Claim Elf");
 				game.claimElfFromMarket(0);
 			}
 			else if (elfCount == 2 && canAffordLeftElf)
 			{
+				//console.log("   Use Left Elf");
 				game.useElf(playerNum, 0);
 			}
 			else if (elfCount == 2 && canAffordRightElf)
 			{
+				//console.log("   Use Right Elf");
 				game.useElf(playerNum, 1);
 			}
 			else
 			{
+				//console.log("   Claim Ingredient");
 				game.claimIngredientFromMarket(0);
 			}
 		}
 		else
 		{
+			//console.log("   Bake Cookies");
 			for (var i = 0; i < game.recipeMarket.length; i += 1)
 			{
 				if (game.playerCanBakeRecipe(i))

@@ -40,11 +40,11 @@ var draw = {
 		{
 			if (anotherPlayerElf || game.ingredientMarket.length == 0)
 			{
-				html += game.elfMarket[i].getHTML();
+				html += game.elfMarket[i].getHTML(true, true);
 			}
 			else
 			{
-				html += "<span class='clickable' onclick='game.claimElfFromMarket(" + i.toString() + ")'>" + game.elfMarket[i].getHTML() + "</span>";
+				html += "<span class='clickable' onclick='game.claimElfFromMarket(" + i.toString() + ")'>" + game.elfMarket[i].getHTML(true, true) + "</span>";
 			}
 		}
 		
