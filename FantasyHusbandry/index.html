@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="stylesheet.css" type="text/css" />
+		<meta name="author" content="Chris Turd Boomerang Armstrong" />
+		<title>Fantasy Husbandry Companion App</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<div id='parentOneDiv'>
+			<p>PARENT 1:</p>
+			<p id='parentOneSelectTypeP'></p>
+			<p id='parentOneStatValuesP'></p>
+		</div>
+		
+		<div id='parentTwoDiv'>
+			<p>PARENT 2:</p>
+			<p id='parentTwoSelectTypeP'></p>
+			<p id='parentTwoStatValuesP'></p>
+		</div>
+		
+		<p><button id="generateChildButton" disabled="true" onclick="ui.show_child_animal()">GENERATE CHILD</button></p>
+		
+		<div id='childDiv'>
+		</div>
+
+		<script src="jquery.min.js" type="text/javascript"></script>
+		<script src="generate_animal.js" type="text/javascript"></script>
+		<script src="combine_animals.js" type="text/javascript"></script>
+		<script src="ui.js" type="text/javascript"></script>
+		<script src="draw.js" type="text/javascript"></script>
+		<script src="setup.js" type="text/javascript"></script>
+	</body>
+</html>
