@@ -1,0 +1,52 @@
+body {
+	font-size: medium;
+}
+
+#raceCanvas {
+	border: 1px solid black;
+	display: inline;
+	margin: 5px;
+	background: #386641;
+}
+
+#toolTipDiv {
+	overflow-y: auto;
+	width: 100%
+}
+
+.tooltipTD {
+	padding: 5px;
+}
+
+.raceInfoDiv {
+	margin: 5px;
+	padding: 5px;
+}
+
+.card {
+	border: 1px solid black;
+	width: 12vw;
+	min-width: 180px;
+	height: 12vw;
+	min-height: 180px;
+	float: left;
+	margin: 5px;
+	padding: 5px;
+}
+
+.selectableCard:hover {
+	border: 3px dashed black;
+	cursor: pointer;
+}
+
+.selectedCard {
+	border: 3px solid black;
+}
+
+.invalidCard {
+	color: grey;
+}
+
+.invalidCardAttribute {
+	color: red;
+}

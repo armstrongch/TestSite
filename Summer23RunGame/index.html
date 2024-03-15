@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="stylesheet.css" type="text/css" />
+		<meta name="author" content="Chris Armstrong" />
+		<title>Trud Boomerang's Fantasy Cross Country 2023</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body onload="game_state_manager.setup()">
+		<div id="TITLE_DIV" class="stateDiv">
+			TITLE DIV
+		</div>
+		
+		<div id="TEST_DIV" class="stateDiv">
+			TEST DIV
+		</div>
+		
+		<div id="RACE_DIV" class="stateDiv">
+			
+			<table>
+				<tr>
+					<td>
+						<canvas id="raceCanvas" width="0" height="0"></canvas>
+					</td>
+					<td style="width: 100%">
+						<div id="toolTipDiv"></div>
+					</td>
+				</tr>
+				
+				<tr><td>
+					<p id="raceInfo" class="raceInfoDiv">Race Info Div Test</p>
+				</td></tr>
+				
+				<tr><td>
+					<div id="cardsDiv">Cards Div</div>
+				</td></tr>
+			</table>
+		</div>
+
+		
+		<script src="jquery.min.js" type="text/javascript"></script>
+		<script src="game_state.js"></script>
+		<script src="runner.js"></script>
+		<script src="race.js"></script>
+		<script src="test.js"></script>
+		<script src="names.js"></script>
+		<script src="card.js"></script>
+		<script src="course.js"></script>
+		<script src="team.js"></script>
+		<script src="game.js"></script>
+		<script src="draw_race.js"></script>
+		<script src="draw_race2.js"></script>
+		<script src="canvas_scale.js"></script>
+		<script src="utility.js"></script>
+	</body>
+</html>
