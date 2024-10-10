@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>GAME TITLE GOES HERE</title>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css">
+	</head>
+	<body onload="setup.load()">
+		<div>		
+			<table>
+				<tr>
+					<td><img id='guideImg'/></td>
+					<td><img id='pageImg'/></td>
+				</tr>
+				<tr>
+					<td>
+						<p>
+							<button>&lt;</button>
+							<button>&gt;</button>
+						</p>
+					</td>
+					<td>
+						<p>
+							<button>&lt;</button>
+							<button>&gt;</button>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<p>
+				<button onclick="coins.flip()">Flip Coin</button>
+				<button onclick="coins.clear()">Clear</button>
+			</p>
+			<p id="coinP"></p>
+		</div>
+		<script src="jquery.min.js"></script>
+		<script src="coins.js"></script>
+		<script src="book.js"></script>
+		<script>
+			var setup = {
+				load: function()
+				{
+					book.load();
+				}
+			}
+		</script>
+	</body>
+</html>

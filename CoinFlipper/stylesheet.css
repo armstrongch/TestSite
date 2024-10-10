@@ -1,0 +1,19 @@
+body  {
+	font-size: large;
+}
+
+button {
+	font-size: large;	
+}
+
+div {
+	text-align: center;
+}
+
+table {
+	 margin: 0 auto;
+}
+
+#gameCanvas {
+	border: 1px solid black;
+}
