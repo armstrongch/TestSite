@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='UTF-8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>Broughlikes the Turd Boomerang Way</title>
+		<style>
+			body {
+				font-size: x-large;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Broughlikes, the Turd Boomerang Way</h1>
+		<h2>A tutorial for intermediate game developers by Chris 'Turd Boomerang' Armstrong</h2>
+		<p>Special Thanks: <a href="https://www.smestorp.com/">Michael Brough</a>, <a href="https://sapazu.itch.io/">Sapazu</a></p>
+		
+		<h3>Contents</h3>
+		<p><a href="#introduction">Introduction</a></p>
+		<p><a href="#step1">Step 1: Generating a Map</a></p>
+		<p><a href="#step2">Step 2. The Pathfinding Algorithm</a></p>
+		<p><a href="#step3">Step 3. Adding Random Walls</a></p>
+		<p><a href="#step4">Step 4. Adding Monsters</a></p>
+		
+		<h3 id="introduction">Introduction</h3>
+		
+		<p>
+			Welcome to my tutorial!<br/>
+			This is my first tutorial, which I am writing at the request of my friend Sapazu.<br/>
+			Each section will contain an explanation of the required steps, followed by a code snippet with comments.<br/>
+			My example project was built in GameMaker Studio 1.6, so the sample code is written in GML, similar to javascript.<br/>
+			There is not enough information here to recreate my project from scratch, but I hope the ideas are explained in such a way that you can go on to create your own game in this style.
+		</p>
+		
+		<h3 id="step1">Step 1: Generating a Map</h3>
+		
+		
+		<p>
+			Broughlikes take place in a series of small, randomly generated square maps.<br/>
+			These maps contain a grid of spaces, subdivided by a random configuration of walls.<br/>
+			Each map will contain a player, an exit door, and some number of monsters.<br/>
+		</p>
+		
+		<ol>
+			<li>Create a 5 x 5 grid of spaces, and store a reference to each space in a 2d array.</li>
+			<li>Add an outward-facing walls to the spaces at either end of each row or column.</li>
+			<li>Determine a start position for the player. For my example, I will use one of the four corners of the map.</li>
+			<li>Determine the location of the exit portal. For my example, I will use the corner opposite the player.</li>
+			<img src="GenerateMap1.png"/>
+		
+			<p><details>
+				<summary>Related code from the init_map function</summary>
+				<pre><code>
+//The top-right corner of the map on-screen will be (64, 64)
+var start_x = 64;
+var start_y = 64;
+
+//The player will start in one of the 4 corners of the map.
+var player_start_i = irandom(1)*4; //Horizontal space is either 0 or 4
+var player_start_j = irandom(1)*4; //Vertical space is either 0 or 4
+
+//The escape portal will start in the corner opposite to the player
+var escape_i = abs(player_start_i - 4);
+var escape_j = abs(player_start_j - 4);
+
+//Spaces will be 128 x 128 sprites
+global.space_size = 128;
+
+//Create a 5 x 5 grid of spaces
+for (var i = 0; i &lt; 5; i += 1)
+{
+    for (var j = 0; j &lt; 5; j += 1)
+    {
+        var space = instance_create(start_x + i*128, start_y + j*128, Space_obj);
+        /* global.map is a 2d array, containing all of the spaces.
+        We can use this to easily determine which spaces are next to each other without writing a lot of
+        collision code or doing coordinate multiplication. */
+        global.map[i, j] = space;
+        
+        /* All of the spaces at the start/end of a row/column should have outward-facing walls,
+        so the player cannot walk out of the map. */
+        if (i == 0)
+        {
+            add_wall_in_direction_from_space(global.map[i, j], 180);
+        }
+        else if (i == 4)
+        {
+            add_wall_in_direction_from_space(global.map[i, j], 0);
+        }
+        
+        if (j == 0)
+        {
+            add_wall_in_direction_from_space(global.map[i, j], 90);
+        }
+        else if (j == 4)
+        {
+            add_wall_in_direction_from_space(global.map[i, j], 270);
+        }
+        
+        // If this is the space we selected for the player, add the player!
+        if (i == player_start_i && j == player_start_j)
+        {
+            Player_obj.x = space.x + global.space_size/2;
+            Player_obj.y = space.y + global.space_size/2;
+        }
+        else if (i == escape_i && j == escape_j)
+        {
+            instance_create(space.x + global.space_size/2, space.y + global.space_size/2, Escape_obj);
+        }
+    }
+}
+				</code></pre>
+			</details></p>
+
+		</ol>
+	
+		<h3 id="step2">Step 2. The Pathfinding Algorithm</h3>
+		
+		<p>
+			I use a modified version of the <a href="https://en.wikipedia.org/wiki/A*_search_algorithm">a*</a> pathfinding algorithm
+			to determine the shortest path between spaces on the map.
+		</p>
+		
+		<p>
+			We will create a function named "build_a_star" which takes a single "start space" as an argument.<br/>
+			It will create a 2d array with the same dimensions as the map.<br/>
+			Each cell will contain a number, corresponding to the number of spaces away it is from the start space.
+		</p>
+		
+		<ol>
+			<li>Create a 2d array named "a_star" with the same dimensions as the map (5 x 5).</li>
+			<li>Assign each cell in the array a null value. After we are done, any spaces that are still NULL are inaccessible from the pathfinding start point.</li>
+			<li>Call the "assign_a_star" helper function, to assign the start space a value of 0, and recursively assign values to all other connected spaces.</li>
+		</ol>
+		
+		<p><details>
+				<summary>Code from the build_a_star function:</summary>
+				<pre><code>
+//build_a_star(space)
+
+// global.a_star is a 2d array, the same size as global.map. Using a given starting space,
+// this assigns a number to each space, representing the distance away from the start.
+
+// We can use this for map-building and pathfinding.
+
+var space = argument0;
+var coords = get_map_coordinates_from_space(space);
+
+// Clear the a_star array.
+// Some spaces may be inaccessible due to wall placement. If this is the case, we want
+// to overwrite the old value with "noone"
+for (var i = 0; i &lt; 5; i += 1)
+{
+    for (var j = 0; j &lt; 5; j += 1)
+    {
+        global.a_star[i, j] = noone;
+    }
+}
+
+// The starting space is 0 spaces away from itself.
+// This function will ALSO assign values to the surrounding spaces, recursively filling the whole map.
+assign_a_star_distance(coords[0], coords[1], 0);
+				</code></pre>
+			</details></p>
+		
+		<p>The "assign_a_star_distance" helper function will take a pair of corrdinates and a value as input, and will perform the following steps:</p>
+		
+		<ol>
+			<li>Find the a_star array cell corresponding to the input coordinates.</li>
+			<li>If the cell contains a NULL value, assign it the new input value.</li>
+			<li>If the cell already contains a value, assign it the new value <i>only</i> if the new value is less than the current value.</li>
+			<li>
+				Call assign_a_star_distance for each accessible adjacent space to assign the same value + 1.<br/>
+				If we found a space that is 3 spaces away from the start, we can deduce that each adjacent space that is not separated by a wall and does not already have a value must be 4 spaces away from the start.
+			</li>
+		</ol>
+			
+		<p><details>
+				<summary>Code from the assign_a_star_distance function</summary>
+				<pre><code>
+//assign_a_star_distance(i, j, val)
+var i = argument0;
+var j = argument1;
+var val = argument2;
+
+var current_val = global.a_star[i, j];
+
+// If this space does not have an a_star value 
+// or the current value is GREATER than the new value
+if (current_val == noone || current_val > val)
+{
+    // Set the value in the a_star array, which represents the distance from the start space
+    global.a_star[i, j] = val;
+    
+    // Check each orthogonal direction: up, down, left and right.
+    // If this is not the last space in the row/column in either direction,
+    // and there is not a wall in the way, assign the new value + 1 to that space.
+    
+    // For instance, if the current space is 3 spaces away fro the start,
+    // we assert that all of the surrounding spaces are 4 spaces from the start.
+    // The value will only be assigned if the new value is less than the current value.
+    if (i > 0)
+    {
+        if !wall_between_spaces(global.map[i, j], global.map[i-1, j])
+        {
+            assign_a_star_distance(i-1, j, val+1);
+        }
+    }
+    
+    if (i &lt; 4)
+    {
+        if !wall_between_spaces(global.map[i, j], global.map[i+1, j])
+        {
+            assign_a_star_distance(i+1, j, val+1);
+        }
+    }
+    
+    if (j > 0)
+    {
+        if !wall_between_spaces(global.map[i, j], global.map[i, j-1])
+        {
+            assign_a_star_distance(i, j-1, val+1);
+        }
+    }
+    
+    if (j &lt; 4)
+    {
+        if !wall_between_spaces(global.map[i, j], global.map[i, j+1])
+        {
+            assign_a_star_distance(i, j+1, val+1);
+        }
+    }
+    
+    
+}
+				</code></pre>
+			</details></p>
+		
+		<p>Since your map does not currently have any interior walls, if you call build_a_star with the center space as the start space, the a_star array should look like this:</p>
+		<p>
+			<code><pre>
+[
+	[4, 3, 2, 3, 4],
+	[3, 2, 1, 2, 3],
+	[2, 1, 0, 1, 2],
+	[3, 2, 1, 2, 3],
+	[4, 3, 2, 3, 4]
+]
+			</code></pre>
+		</p>
+		
+		<p>Notice how the corner spaces are 4 orthogonal moves from the center space.</p>
+		<p><img src="Pathfinding1.png"/></p>
+			
+		
+		
+		<h3 id="step3">Step 3. Adding Random Walls</h3>
+		
+		<ol>
+			<li>Create a list of every location where a wall could be generated. There are 40 locations in total.<br/>
+			A vertical wall could exist between each space in all 5 columns, and a horizontal wall could exist between each space in all 5 rows.<br/>
+			In my implementation, I store each location as a pair of spaces.<br/></li>
+			<img src="GenerateMap2.png"/>
+			<li>Shuffle the list of wall locations.</li>
+			<li>Add a random wall to the map.</li> 
+			<ol style="list-style-type: lower-alpha;">
+				<li>Get the first item in the wall locations list.</li>
+				<li>Create a wall object in the specified location.</li>
+				<li>Remove the location from the list.</li>
+				<li>Build the a_star pathfinding array, with the center space as the starting point.</li>
+				<li>
+					If the space on either side of the new wall has a pathfinding value of NULL, that means that the new wall has subdivided the map, and some spaces are not accessible.<br/>
+					If this is the case, delete the new wall, and repeat step 3 in its entirety.<br/>
+					In the example below, note that NULL == -4 in GML.
+				</li>
+				<p><img src="RandomWall1.png"/></p>
+			</ol>
+			<li>
+				Repeat step 3 until you have your desired number of walls. For my example, I will generate between 4 and 8 walls per map.<br/>
+				Beware: If you are generating a lot of walls on a small map, it is possible that you will run out of valid locations before you are done building random walls.
+			</li>
+			<p><img src="RandomWall2.png"/></p>
+			<p><details>
+				<summary>Code from the add_random_wall function</summary>
+				<pre><code>
+// If there is at least 1 valid wall location on our list
+if ds_list_size(global.wall_locations) > 0
+{
+    // Add a wall to the first location on the list.
+    // (It was shuffled when we created it, so this should be random.)
+    
+    var location = ds_list_find_value(global.wall_locations, 0);
+    
+    var wall = add_wall_between_spaces(location[0], location[1]);
+    
+    // Create the pathfinding map
+    build_a_star(global.map[2, 2]);
+    
+    var valid = true;
+    
+    // Check the spaces on either side of the new wall.
+    // If either space has been completely blocked off from the rest of the map, this wall location is no good.
+    for (var i = 0; i &lt; 2; i += 1)
+    {
+        var coords = get_map_coordinates_from_space(location[i]);
+        if (global.a_star[coords[0], coords[1]] == noone)
+        {
+            valid = false;
+        }
+    }
+    
+    // Remove the first wall location from the list
+    ds_list_delete(global.wall_locations, 0);
+    
+    // If this was not a valid location, delete the new wall, and repeat the entire process.
+    if (!valid)
+    {
+        with (wall) { instance_destroy(); }
+        add_random_wall();
+    }
+}
+				</code></pre>
+			</details></p>
+		</ol>
+		
+		<h3 id="step4">Step 4. Adding Monsters</h3>
+		
+		<p>
+			In my example, each room will be more challenging than the last.<br/>
+			I will have 3 types of monsters. They will all share the same behavior, but will have different art and different amounts of starting health.<br/>
+			I will use a persistent "Monster Manager" class that will track the number of levels that the player has cleared,
+			and will determine the number and level of the monsters that appear in each room.<br/>
+			I will not cover that process in detail in this tutorial, but the end result is a "monsters_array" that is generated when the player arrives in a new room.<br/>
+			The "monsters_array" is an array of integers. The number of elements determines the number of monsters, and each item determines the level of that particular monster.<br/>
+			For instance, an array that looks like this <code>[1, 1, 1, 2, 3]</code> would spawn 3 level-1 monsters, a level-2 monster, and a level-3 monster.<br/>
+		</p>
+		
+		<p>We will create a function called "create_monsters_on_random_spaces", which will take the mosnters_array as input. It will follow the following steps:</p>
+		
+		<ol>
+			<li>Build the pathfinding array, with the player's current space as the starting point.</li>
+			<li>
+				Make a list of every space with a pathfinding value of 3 or greater. In the interest of fairness, we don't want to generate a monster less than 3 spaces away from the player.<br/>
+				Beware: If you are generating a lot of monsters on a small map, you may run out of valid spawn locations.</li>
+			<li>Shuffle the list of monster locations.</li>
+			<li>
+				For each entry in the monsters_array, pick the next space in the list and add a monster of the appropriate level.<br/>
+				In the example below, the monsters array = <code>[1, 1, 1, 2]</code>:
+			</li>
+			
+			<p><img src="AddMonsters1.png"/></p>
+		</ol>
+		
+		<p><details>
+			<summary>Code from the create_monsters_on_random_spaces function</summary>
+			<pre><code>
+///create_monsters_on_random_spaces(monsters_array)
+
+// The monsters array is an array of integers.
+// Each integer is the level of a monster to be generated at a random location.
+// For instance: [ 1, 2, 2, 3 ]
+// This should generate a level 1 monsters, a pair of level 2 monsters, and a level 3 monster.
+var monsters_array = argument0;
+
+// Build the pathfinding array, with the player's current position as the starting point
+with (Player_obj)
+{
+    build_a_star(get_current_space());
+}
+
+// Build a list of all spaces that are at least 3 moves away from the player.
+var valid_spaces = ds_list_create();
+for (var i = 0; i < 5; i += 1)
+{
+    for (var j = 0; j < 5; j += 1)
+    {
+        if (global.a_star[i, j] >= 3)
+        {
+            ds_list_add(valid_spaces, global.map[i, j]);
+        }
+    }   
+}
+// Shuffle the list of valid spaces.
+ds_list_shuffle(valid_spaces);
+
+// Pick spaces from the list to create monsters from the array of the appropriate level.
+for (var i = 0; i < array_length_1d(monsters_array); i += 1)
+{
+    if (ds_list_size(valid_spaces) > 0)
+    {
+        var space = ds_list_find_value(valid_spaces, 0);
+        create_monster(space, monsters_array[i]);
+        ds_list_delete(valid_spaces, 0);
+    }
+}
+			</code></pre>
+		</details></p>
+		
+			
+		<!--	
+		<p><details>
+			<summary>Code from the create_monsters_on_random_spaces function</summary>
+			<pre><code></code></pre>
+		</details></p>
+		-->
+		
+	</body>
+</html>
