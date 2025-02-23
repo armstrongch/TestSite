@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='UTF-8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>GAME TITLE GOES HERE</title>
+		<link rel='stylesheet' href='stylesheet.css' type='text/css'>
+	</head>
+	<body onload='setup.test_load()'>
+		<div id='kid_select_state_div' class='stateDiv'>
+			<h2>Choose 3 kids to bring trick-or-treating!</h2>
+			<p><button id='finalizeKidsButton' disabled='true' onclick='kids.finalize()'>Continue</button></p>
+			<table>
+				<tr id='kidsTR1'></tr>
+				<tr id='kidsTR2'></tr>
+			</table>
+
+		</div>
+		
+		<div id='play_game_state_div' class='stateDiv'>
+			<div id='kidsAndEncountersDiv'>
+				<canvas id='kidsAndEncountersCanvas'></canvas>
+			</div>
+			<h2>
+				Click to doodle<br/>
+			</h2>
+			<div id='coinsDiv'>
+				<p>
+					<button onclick='coins.flip()'>Flip Coin</button>
+					<button onclick='coins.clear()'>Clear</button>
+				</p>
+				<p id='coinP'></p>
+			</div>
+		</div>
+		<script src='jquery.min.js'></script>
+		<script src='state_machine.js'></script>
+		<script src='game.js'></script>
+		<script src='kids.js'></script>
+		<script>
+			var setup = {
+				load: function()
+				{
+					game.init_images();
+					state_machine.change_state('kid_select');
+					kids.load();
+				},
+				test_load: function()
+				{
+					this.load();
+					
+					/*game.add_new_doodle("x", 30, 50);
+					game.add_new_doodle("one", 60, 50);
+					game.add_new_doodle("two", 90, 50);
+					game.add_new_doodle("three", 120, 50);
+					game.add_new_doodle("check", 150, 50);
+					game.add_new_doodle("x", 180, 50);*/
+					
+					game.kids_card_image_sources = [
+						"file:///C:/Users/chris/Documents/HTML/PPCJ24/Kids/TestlyCard.png",
+						"file:///C:/Users/chris/Documents/HTML/PPCJ24/Kids/TestlyCard.png",
+						"file:///C:/Users/chris/Documents/HTML/PPCJ24/Kids/TestlyCard.png"
+					];
+					game.load();
+					state_machine.change_state('play_game');
+				},
+			}
+		</script>
+	</body>
+</html>
