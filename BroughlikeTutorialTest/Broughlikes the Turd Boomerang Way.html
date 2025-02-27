@@ -8,6 +8,9 @@
 			body {
 				font-size: x-large;
 			}
+			img {
+				max-width: 85vw;
+			}
 		</style>
 	</head>
 	<body>
@@ -21,6 +24,8 @@
 		<p><a href="#step2">Step 2. The Pathfinding Algorithm</a></p>
 		<p><a href="#step3">Step 3. Adding Random Walls</a></p>
 		<p><a href="#step4">Step 4. Adding Monsters</a></p>
+		<p><a href="#step5">Step 5. Gameplay Loop</a></p>
+		<p><a href="#step6">Step 6. The Monsters' Turn</a></p>
 		
 		<h3 id="introduction">Introduction</h3>
 		
@@ -396,7 +401,208 @@ for (var i = 0; i < array_length_1d(monsters_array); i += 1)
 			</code></pre>
 		</details></p>
 		
+		
+		<h3 id="step5">Step 5. Gameplay Loop</h3>
+		
+		<p>
+			In each room, the player and the monsters will take turns moving.
+			Broughlikes famously do not allow the player to "wait" instead of moving, so we will not end the player's turn if they attempt to move into a wall or off of the map.<br/>
+			If the player moves "into" a monster, the player will deal damage to the monster instead of moving. This style of "bump-to-attack" movement is a staple of the Broughlike genre.<br/>
+		</p>
+		<p>
+			After each player turn, all of the monsters wil move.<br/>
+			Since all of the monsters will be moving towards the player, we will sort them based on their distance from the player.<br/>
+			The closest monster will move first, and then the second-closest, and so-on.
+			This will help avoid traffic jams - monsters cannot share the same space, so moving the closest monster at the end of the monsters' turn would block all
+			of the other monsters from moving closer to the player.<br/>
+			Similar to the player, if a monster moves "into" the player, the monsters remainins stationary and deals damage to the player.
+		</p>
+		<p>
+			Moving the player, calculating damage and awarding points are all relatively simple.<br/>
+			If your game has a lot of complicated triggered effects and abilities, or multiple monster types with different phases, you may need to implement a finite state machine.<br/>
+			For my example game, I use a "ready_to_move" flag on the player object that determines whether it is the player's turn or the monsters' turn.<br/>
+		</p>
+		
+		<h3 id="step6">Step 6. The Monsters' Turn</h3>
+		<ol>
+			<li>Destroy any monster with zero health (or less) and award the player points.</li>
 			
+			<li>Count the total number of living monsters.</li>
+			
+			<li>If there are zero living monsters, the monsters' turn is over - start the player's turn immediately!</li>
+		
+			<li>Build the pathfinding map, with the player's current space as the starting point.</li>
+			
+			<li>Assign the "has_moved" flag to false for all monsters.</li>
+			
+			<li>For each monster, calculate the current distance to the player using the pathfinding map.</li>
+			
+			<li>Find the monster which is closest to the player, where has_moved = false.</li>
+			
+			<li>If the selected monster is directly next to the player, attack the player. Otherwise, perform the following steps:</li>
+			
+			<ol style="list-style-type: lower-alpha;">
+			
+				<li>Check the pathfinding distance for each orthogonally adjacent space, ignoring spaces that are blocked by walls or monsters.<br/>
+				(You should use a random order to loop through these spaces, so the monsters do not always make the same choice when there are 2 valid spaces that are equally close to the player.)</li>
+				
+				<li>If there is at least one valid adjacent space, move to the adjacent space that is closest to the player.</li>
+				
+			</ol>
+				
+			<li>Mark the selected monsters as "has_moved."</li>
+			
+			<li>If there is at least one monster where has_moved = false, return to step 7. Otherwise, the monsters' turn is over.</li>
+				
+		</ol>
+		
+		<p><details>
+			<summary>Code from the move_all_monsters function</summary>
+			<pre><code>
+// If any monster have 0 hp, destroy them and give the player points
+// according to their level before beginning pathfinding.
+with (Monster_obj)
+{
+    if hp <= 0
+    {
+        Player_obj.points += MonsterManager_obj.difficulty * (image_index + 1);
+        instance_destroy();
+    }
+}
+
+var monster_count = instance_number(Monster_obj);
+
+// If there are no monsters, allow the player to move again immediately.
+if (monster_count == 0)
+{
+    Player_obj.ready_to_move = true;
+}
+else
+{
+    with (Player_obj)
+    {
+        // Build the pathfinding array, using the player's position as the start space.
+        build_a_star(get_current_space());
+    }
+    
+    // Mark each monster for movement this turn, and get the current distance from the player.
+    with (Monster_obj)
+    {
+        has_moved = false;
+        coords = get_map_coordinates_from_space(get_current_space());
+        dist_to_player = global.a_star[coords[0], coords[1]];
+    }
+    
+    MonsterManager_obj.timer = 2;
+    
+    // Repeat the following steps while there are still monsters that have not attempted to move.
+    while (monster_count > 0)
+    {
+        MonsterManager_obj.current_monster = noone;
+        
+        // Identify the monster the closest monster to the player that has not moved yet
+        with (Monster_obj)
+        {
+            if !has_moved && ( MonsterManager_obj.current_monster == noone || dist_to_player &lt; MonsterManager_obj.current_monster.dist_to_player )
+            {
+                MonsterManager_obj.current_monster = self;
+            }
+        }
+        
+        with (MonsterManager_obj.current_monster)
+        {
+            var best_space = noone;
+            var best_dist = noone;
+            
+            // If the monster is 1 space away from the player, attack the player!
+            if (dist_to_player) == 1
+            {
+                attack_player = true;
+                best_space = get_current_space();
+            }
+            else
+            {
+                attack_player = false;
+                
+                // Search through the orthogonally adjacent spaces.
+                // This starts with a random direction, so monsters will not
+                // always make the same choice when there are multiple viable paths to the player.
+                
+                var start_index = irandom(3);
+                
+                for (var d = start_index; d &lt; start_index + 4; d += 1)
+                {
+                    var angle_in_radians = d/2*pi;
+                    var new_i = coords[0] + cos(angle_in_radians);
+                    var new_j = coords[1] - sin(angle_in_radians);
+                    
+                    // A valid space must be inside the 5 x 5 map grid, cannot be blocked by a wall, and cannot contain another monster.
+                    
+                    var new_space_is_inside_map = new_i >= 0 && new_j >= 0 && new_i <= 4 && new_j <= 4;
+                    
+                    if new_space_is_inside_map
+                    {
+                        var new_dist = global.a_star[new_i, new_j];
+                        var new_space = global.map[new_i, new_j];
+                        
+                        var blocked_by_wall = wall_between_spaces(get_current_space(), new_space);
+                        
+                        if (!blocked_by_wall)
+                        {
+                            var new_space_already_contains_a_monster = place_meeting(
+                                new_space.x + global.space_size/2,
+                                new_space.y + global.space_size/2,
+                                Monster_obj);
+                                
+                            if (!new_space_already_contains_a_monster)
+                            {
+                                // If this is the first valid space we find, this becomes our best option.
+                                // Otherwise, compare whether this space is closer to the player than the previous best option.
+                                if (best_space == noone || best_dist > new_dist)
+                                {
+                                    best_space = new_space;
+                                    best_dist = new_dist;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // If we found a valid space (or we are close enough to attack), move immediately.
+            // It is disorienting to the player if all of the monsters all move instantly and at the same time.
+            // We need to move the monsters right away so that we can calculate pathfinding all at once, but
+            // we will show their movements 1-at-a-time at 10-frame intervals using a timer.
+            
+            if (best_space != noone)
+            {
+                timer = MonsterManager_obj.timer;
+                MonsterManager_obj.timer += 2;
+                
+                x = best_space.x + global.space_size/2;
+                y = best_space.y + global.space_size/2;
+            }
+            
+            has_moved = true;  
+        }
+        
+        monster_count -= 1;
+    }
+}
+			</code></pre>
+		</details></p>
+		
+		<h4>Quality-of-Life Enhancements:</h4>
+		<p>
+			It may be disorienting to the player if all monsters move instantly and simultaneously.<br/>
+			In my example, I assign a timer to each monster, so that the monsters will appear to move one-at-a-time after the "move_all_monsters" function is done.<br/>
+			To achieve this, I need to draw monsters on their prior space while the timer is running.
+		</p>
+		<p>
+			If the player is moving quickly, they may input a movement key while the monster timer is still counting down, even though it only lasts a few frames.<br/>
+			For this reason, I store the player's movement input in a queue, and process the first key press in the queue when the player's turn starts.
+		</p>
+		
 		<!--	
 		<p><details>
 			<summary>Code from the create_monsters_on_random_spaces function</summary>
