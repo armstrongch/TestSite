@@ -14,6 +14,8 @@
 		</style>
 	</head>
 	<body>
+		<h1 style="color: red">Attention! This version is out-of-date! Please see the latest version <a href="https://turdboomerang.itch.io/broughlike-template">HERE</a>!!</h1>
+		
 		<h1>Broughlikes, the Turd Boomerang Way</h1>
 		<h2>A tutorial for intermediate game developers by Chris 'Turd Boomerang' Armstrong</h2>
 		<p>Special Thanks: <a href="https://www.smestorp.com/">Michael Brough</a>, <a href="https://sapazu.itch.io/">Sapazu</a></p>
@@ -127,23 +129,23 @@ for (var i = 0; i &lt; 5; i += 1)
 		</p>
 		
 		<p>
-			We will create a function named "build_a_star" which takes a single "start space" as an argument.<br/>
+			We will create a function named "build_pathfinding_map" which takes a single "start space" as an argument.<br/>
 			It will create a 2d array with the same dimensions as the map.<br/>
 			Each cell will contain a number, corresponding to the number of spaces away it is from the start space.
 		</p>
 		
 		<ol>
-			<li>Create a 2d array named "a_star" with the same dimensions as the map (5 x 5).</li>
+			<li>Create a 2d array named "pathing_values" with the same dimensions as the map (5 x 5).</li>
 			<li>Assign each cell in the array a null value. After we are done, any spaces that are still NULL are inaccessible from the pathfinding start point.</li>
-			<li>Call the "assign_a_star" helper function, to assign the start space a value of 0, and recursively assign values to all other connected spaces.</li>
+			<li>Call the "assign_pathing_values" helper function, to assign the start space a value of 0, and recursively assign values to all other connected spaces.</li>
 		</ol>
 		
 		<p><details>
-				<summary>Code from the build_a_star function:</summary>
+				<summary>Code from the build_pathfinding_map function:</summary>
 				<pre><code>
-//build_a_star(space)
+//build_pathfinding_map(space)
 
-// global.a_star is a 2d array, the same size as global.map. Using a given starting space,
+// global.pathing_values is a 2d array, the same size as global.map. Using a given starting space,
 // this assigns a number to each space, representing the distance away from the start.
 
 // We can use this for map-building and pathfinding.
@@ -151,51 +153,51 @@ for (var i = 0; i &lt; 5; i += 1)
 var space = argument0;
 var coords = get_map_coordinates_from_space(space);
 
-// Clear the a_star array.
+// Clear the pathing_values array.
 // Some spaces may be inaccessible due to wall placement. If this is the case, we want
 // to overwrite the old value with "noone"
 for (var i = 0; i &lt; 5; i += 1)
 {
     for (var j = 0; j &lt; 5; j += 1)
     {
-        global.a_star[i, j] = noone;
+        global.pathing_values[i, j] = noone;
     }
 }
 
 // The starting space is 0 spaces away from itself.
 // This function will ALSO assign values to the surrounding spaces, recursively filling the whole map.
-assign_a_star_distance(coords[0], coords[1], 0);
+assign_pathfinding_distance(coords[0], coords[1], 0);
 				</code></pre>
 			</details></p>
 		
-		<p>The "assign_a_star_distance" helper function will take a pair of corrdinates and a value as input, and will perform the following steps:</p>
+		<p>The "assign_pathfinding_distance" helper function will take a pair of corrdinates and a value as input, and will perform the following steps:</p>
 		
 		<ol>
-			<li>Find the a_star array cell corresponding to the input coordinates.</li>
+			<li>Find the pathing_values array cell corresponding to the input coordinates.</li>
 			<li>If the cell contains a NULL value, assign it the new input value.</li>
 			<li>If the cell already contains a value, assign it the new value <i>only</i> if the new value is less than the current value.</li>
 			<li>
-				Call assign_a_star_distance for each accessible adjacent space to assign the same value + 1.<br/>
+				Call assign_pathfinding_distance for each accessible adjacent space to assign the same value + 1.<br/>
 				If we found a space that is 3 spaces away from the start, we can deduce that each adjacent space that is not separated by a wall and does not already have a value must be 4 spaces away from the start.
 			</li>
 		</ol>
 			
 		<p><details>
-				<summary>Code from the assign_a_star_distance function</summary>
+				<summary>Code from the assign_pathfinding_distance function</summary>
 				<pre><code>
-//assign_a_star_distance(i, j, val)
+//assign_pathfinding_distance(i, j, val)
 var i = argument0;
 var j = argument1;
 var val = argument2;
 
-var current_val = global.a_star[i, j];
+var current_val = global.pathing_values[i, j];
 
-// If this space does not have an a_star value 
+// If this space does not have a pathing_values value 
 // or the current value is GREATER than the new value
 if (current_val == noone || current_val > val)
 {
-    // Set the value in the a_star array, which represents the distance from the start space
-    global.a_star[i, j] = val;
+    // Set the value in the pathing_values array, which represents the distance from the start space
+    global.pathing_values[i, j] = val;
     
     // Check each orthogonal direction: up, down, left and right.
     // If this is not the last space in the row/column in either direction,
@@ -208,7 +210,7 @@ if (current_val == noone || current_val > val)
     {
         if !wall_between_spaces(global.map[i, j], global.map[i-1, j])
         {
-            assign_a_star_distance(i-1, j, val+1);
+            assign_pathfinding_distance(i-1, j, val+1);
         }
     }
     
@@ -216,7 +218,7 @@ if (current_val == noone || current_val > val)
     {
         if !wall_between_spaces(global.map[i, j], global.map[i+1, j])
         {
-            assign_a_star_distance(i+1, j, val+1);
+            assign_pathfinding_distance(i+1, j, val+1);
         }
     }
     
@@ -224,7 +226,7 @@ if (current_val == noone || current_val > val)
     {
         if !wall_between_spaces(global.map[i, j], global.map[i, j-1])
         {
-            assign_a_star_distance(i, j-1, val+1);
+            assign_pathfinding_distance(i, j-1, val+1);
         }
     }
     
@@ -232,7 +234,7 @@ if (current_val == noone || current_val > val)
     {
         if !wall_between_spaces(global.map[i, j], global.map[i, j+1])
         {
-            assign_a_star_distance(i, j+1, val+1);
+            assign_pathfinding_distance(i, j+1, val+1);
         }
     }
     
@@ -241,7 +243,7 @@ if (current_val == noone || current_val > val)
 				</code></pre>
 			</details></p>
 		
-		<p>Since your map does not currently have any interior walls, if you call build_a_star with the center space as the start space, the a_star array should look like this:</p>
+		<p>Since your map does not currently have any interior walls, if you call build_pathfinding_map with the center space as the start space, the pathing_values array should look like this:</p>
 		<p>
 			<code><pre>
 [
@@ -272,7 +274,7 @@ if (current_val == noone || current_val > val)
 				<li>Get the first item in the wall locations list.</li>
 				<li>Create a wall object in the specified location.</li>
 				<li>Remove the location from the list.</li>
-				<li>Build the a_star pathfinding array, with the center space as the starting point.</li>
+				<li>Build the pathing_values pathfinding array, with the center space as the starting point.</li>
 				<li>
 					If the space on either side of the new wall has a pathfinding value of NULL, that means that the new wall has subdivided the map, and some spaces are not accessible.<br/>
 					If this is the case, delete the new wall, and repeat step 3 in its entirety.<br/>
@@ -299,7 +301,7 @@ if ds_list_size(global.wall_locations) > 0
     var wall = add_wall_between_spaces(location[0], location[1]);
     
     // Create the pathfinding map
-    build_a_star(global.map[2, 2]);
+    build_pathfinding_map(global.map[2, 2]);
     
     var valid = true;
     
@@ -308,7 +310,7 @@ if ds_list_size(global.wall_locations) > 0
     for (var i = 0; i &lt; 2; i += 1)
     {
         var coords = get_map_coordinates_from_space(location[i]);
-        if (global.a_star[coords[0], coords[1]] == noone)
+        if (global.pathing_values[coords[0], coords[1]] == noone)
         {
             valid = false;
         }
@@ -340,7 +342,7 @@ if ds_list_size(global.wall_locations) > 0
 			For instance, an array that looks like this <code>[1, 1, 1, 2, 3]</code> would spawn 3 level-1 monsters, a level-2 monster, and a level-3 monster.<br/>
 		</p>
 		
-		<p>We will create a function called "create_monsters_on_random_spaces", which will take the mosnters_array as input. It will follow the following steps:</p>
+		<p>We will create a function called "create_monsters_on_random_spaces", which will take the monsters_array as input. It will follow the following steps:</p>
 		
 		<ol>
 			<li>Build the pathfinding array, with the player's current space as the starting point.</li>
@@ -370,7 +372,7 @@ var monsters_array = argument0;
 // Build the pathfinding array, with the player's current position as the starting point
 with (Player_obj)
 {
-    build_a_star(get_current_space());
+    build_pathfinding_map(get_current_space());
 }
 
 // Build a list of all spaces that are at least 3 moves away from the player.
@@ -379,7 +381,7 @@ for (var i = 0; i < 5; i += 1)
 {
     for (var j = 0; j < 5; j += 1)
     {
-        if (global.a_star[i, j] >= 3)
+        if (global.pathing_values[i, j] >= 3)
         {
             ds_list_add(valid_spaces, global.map[i, j]);
         }
@@ -482,7 +484,7 @@ else
     with (Player_obj)
     {
         // Build the pathfinding array, using the player's position as the start space.
-        build_a_star(get_current_space());
+        build_pathfinding_map(get_current_space());
     }
     
     // Mark each monster for movement this turn, and get the current distance from the player.
@@ -490,7 +492,7 @@ else
     {
         has_moved = false;
         coords = get_map_coordinates_from_space(get_current_space());
-        dist_to_player = global.a_star[coords[0], coords[1]];
+        dist_to_player = global.pathing_values[coords[0], coords[1]];
     }
     
     MonsterManager_obj.timer = 2;
@@ -542,7 +544,7 @@ else
                     
                     if new_space_is_inside_map
                     {
-                        var new_dist = global.a_star[new_i, new_j];
+                        var new_dist = global.pathing_values[new_i, new_j];
                         var new_space = global.map[new_i, new_j];
                         
                         var blocked_by_wall = wall_between_spaces(get_current_space(), new_space);
